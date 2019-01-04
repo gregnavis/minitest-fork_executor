@@ -1,0 +1,21 @@
+PATH
+  remote: .
+  specs:
+    minitest-fork_executor (1.0.0)
+      minitest
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    minitest (5.11.3)
+    rake (12.3.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  minitest-fork_executor!
+  rake
+
+BUNDLED WITH
+   1.17.2
