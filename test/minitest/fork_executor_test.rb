@@ -15,7 +15,7 @@ Minitest.parallel_executor = Minitest::ForkExecutor.new
 # 2. These processes are different from the parent process that spawned the
 #    test suite - hence recording @@parent_pid at the top.
 class ForkTest < Minitest::Test
-  @@log = Tempfile.new
+  @@log = Tempfile.new('pid')
   @@parent_pid = Process.pid
 
   def test_run_in_process_one

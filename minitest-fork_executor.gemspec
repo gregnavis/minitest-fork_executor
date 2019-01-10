@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'minitest-fork_executor'
-  s.version     = '1.0.0'
+  s.version     = '1.0.1'
   s.date        = '2019-01-03'
   s.summary     = 'Near-perfect process-level test case isolation.'
   s.description = 'Run each test_* method in a separate process thus eliminating test case interference.'
@@ -12,7 +12,8 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'minitest'
 
-  s.add_development_dependency 'rake'
+  # The last versions that supports Ruby 1.9.3.
+  s.add_development_dependency 'rake', '= 12.2.1'
 
   s.homepage    = 'https://github.com/gregnavis/minitest-fork_executor'
   s.license     = 'MIT'
