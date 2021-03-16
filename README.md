@@ -1,17 +1,14 @@
 # Minitest Fork Executor
 
-Achieve near-perfect process-level test case isolation by running each and
-every test case in a separate process.
-
-The gem operates at **the method-level**, not the class-level. This means that
-running a test class `MyTest` with test methods `test_one`, `test_two` and
-`test_three` will run each of these `test_*` methods in a separate process.
+If you're struggling with state leaking between test cases then
+`minitest-fork_executor` can help you alleviate the pain by **running each
+test case in a separate process** so that no state can be leaked between them.
 
 [<img src="https://travis-ci.org/gregnavis/minitest-fork_executor.svg?branch=master" alt="Build Status" />](https://travis-ci.org/gregnavis/minitest-fork_executor)
 
 ## Installation
 
-Install either via Ruby Gems
+Install via Ruby Gems:
 
 ```
 gem install minitest-fork_executor
@@ -30,26 +27,25 @@ or a similar file:
 Minitest.parallel_executor = Minitest::ForkExecutor.new
 ```
 
-## Why?
+From now on, each test method will be run in a separate process.
 
-The gem is motivated by my work on
-[`active_record_doctor`](https://github.com/gregnavis/active_record_doctor).
-Each test case in the test suite defines an Active Record model dynamically and
-it turned out these models aren't garbage collected properly. The most likely
-reason for that was `ActiveSupport::DescendantsTracker` in Rails. The problem
-was compounded by testing against multiple versions of Ruby and Rails. Fixing
-the problem in one configuration caused it to reoccur in another one.
+## Rationale and Prior Art
 
-I wasn't able to use already-existing solutions like `minitest-parallel_fork`
-because they fork for each class but then run each `test_*` methods in a class
-in the same process. This wasn't granular enough to solve my issue and I wanted
-to avoid splitting my test suite into multiple single-method test classes.
+When working on [`active_record_doctor`](https://github.com/gregnavis/active_record_doctor)
+I had to deal with order-dependent test cases caused by insufficient garbage
+collection of dynamically defined Active Record classes. The extent of the
+problem was compounded by supporting multiple versions of Ruby and Rails.
 
-Debugging and fixing the issue wasn't a top priority for me as I had already
-invested hours in finding a solution. My goal was to release
-`active_record_doctor` and insulate myself from similar occurences in the
-future.
+The proper solution to the problem would be to fix the offending Rails code but
+it would be a time-consuming distraction from work I wanted done on `active_record_doctor`.
+I decided to work around the problem by running each test case in a separate
+process and turned the solution into a standalone gem.
 
+`minitest-parallel_fork` is a similar gem but works at a class-level instead of
+test-case level. It means `test_*` methods defined on the same test class can
+still leak state. The problem could be avoided by splitting each test class
+into multiple single-method test classes (one for each `test_*` method) however
+I decided against that solution in order to maintain higher test cohesion.
 ## Author
 
 This gem is developed and maintained by [Greg Navis](mailto:contact@gregnavis.com).
