@@ -1,13 +1,13 @@
 PATH
   remote: .
   specs:
-    minitest-fork_executor (1.0.1)
+    minitest-fork_executor (1.0.2)
       minitest
 
 GEM
   remote: https://rubygems.org/
   specs:
-    minitest (5.11.3)
+    minitest (5.14.4)
     rake (12.2.1)
 
 PLATFORMS

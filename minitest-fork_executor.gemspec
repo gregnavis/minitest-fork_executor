@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'minitest-fork_executor'
-  s.version     = '1.0.1'
+  s.version     = '1.0.2'
   s.date        = '2019-01-03'
   s.summary     = 'Near-perfect process-level test case isolation.'
   s.description = 'Run each test_* method in a separate process thus eliminating test case interference.'
