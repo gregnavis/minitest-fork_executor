@@ -45,7 +45,7 @@ namespace :test do
   task :acceptance do
     Dir.mktmpdir do |dir|
       path = "#{dir}/unmarshallable_test.out"
-      ruby(%[-Ilib test/acceptance/unmarshallable_test.rb >& #{path} || true])
+      ruby(%[-Ilib test/acceptance/unmarshallable_test.rb > #{path} 2>&1 || true])
 
       output = File.read(path)
 

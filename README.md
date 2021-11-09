@@ -4,7 +4,7 @@ If you're struggling with state leaking between test cases then
 `minitest-fork_executor` can help you alleviate the pain by **running each
 test case in a separate process** so that no state can be leaked between them.
 
-[<img src="https://travis-ci.org/gregnavis/minitest-fork_executor.svg?branch=master" alt="Build Status" />](https://travis-ci.org/gregnavis/minitest-fork_executor)
+[![Build Status](https://github.com/gregnavis/minitest-fork_executor/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/gregnavis/minitest-fork_executor/actions/workflows/test.yml)
 
 ## Installation
 

@@ -43,7 +43,7 @@ module Minitest
 
           # Unwrap all failures from FailureTransport so that they can be
           # safely presented to the user.
-          result.failures.map! { _1.failure }
+          result.failures.map!(&:failure)
 
           # We're done reading results from the child so it's safe to close the
           # IO object now.
@@ -63,7 +63,7 @@ module Minitest
           # PG::Connection that cannot be marshalled. In those case, we replace
           # the original error with UnmarshallableError retaining as much
           # detail as possible.
-          result.failures.map! { FailureTransport.new(_1) }
+          result.failures.map! { |failure| FailureTransport.new(failure) }
 
           # The child process doesn't read anything.
           read_io.close
@@ -110,7 +110,19 @@ module Minitest
         # PROCESS RESPONSIBLE FOR RUNNING A SINGLE TEST. IF THIS ASSUMPTION IS
         # VIOLATED THEN AN ALTERNATIVE APPROACH (E.G. DUPLICATING THE FAILURE)
         # MIGHT BE NECESSARY.
-        failure.error = UnmarshallableError.new(failure.error)
+
+        if failure.respond_to?(:exception) && failure.respond_to?(:exception=)
+          failure.exception = UnmarshallableError.new(failure.exception)
+        elsif failure.respond_to?(:error) && failure.respond_to?(:error=)
+          failure.error = UnmarshallableError.new(failure.error)
+        else
+          raise(<<ERROR)
+Minitest failures should respond respond to exception/exception= (versions prior
+to 5.14.0) or error/error= (version 5.14.0 and newer). The received failure does
+responds to neither. Are you using an newer Minitest version?
+ERROR
+        end
+
         Marshal.dump(failure)
       end
 

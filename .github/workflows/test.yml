@@ -1,0 +1,46 @@
+name: Test
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # Test older Rubies only against Bundler v1.
+          - ruby-version: 1.9.3
+            bundler: 1.17.3
+          - ruby-version: 2.0.0
+            bundler: 1.17.3
+          - ruby-version: 2.1.9
+            bundler: 1.17.3
+          - ruby-version: 2.2.10
+            bundler: 1.17.3
+          - ruby-version: 2.3.8
+            bundler: 1.17.3
+          # Test newer Rubies only against Bundler v2.
+          - ruby-version: 2.4.10
+            bundler: null
+          - ruby-version: 2.5.9
+            bundler: null
+          - ruby-version: 2.6.8
+            bundler: null
+          - ruby-version: 2.7.4
+            bundler: null
+          - ruby-version: 3.0.2
+            bundler: null
+    steps:
+      - uses: actions/checkout@v2
+
+      # Gemfile.lock in the repo is for development purposes and won't work with
+      # older Rubies. We remove it to force its regeneration.
+      - name: Remove Gemfile.lock
+        run: rm Gemfile.lock
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+
+      - name: Run the test suite
+        run: bundle exec rake test
