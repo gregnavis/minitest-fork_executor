@@ -11,11 +11,11 @@ GEM
     rake (12.2.1)
 
 PLATFORMS
-  ruby
+  arm64-darwin-21
 
 DEPENDENCIES
   minitest-fork_executor!
   rake (= 12.2.1)
 
 BUNDLED WITH
-   1.17.2
+   2.2.22
