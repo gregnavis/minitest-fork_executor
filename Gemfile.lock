@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    minitest-fork_executor (1.0.2)
+    minitest-fork_executor (1.0.3)
       minitest
 
 GEM
