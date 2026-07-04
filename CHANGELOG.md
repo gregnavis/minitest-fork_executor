@@ -1,3 +1,7 @@
+# Version 1.1.0
+
+* Enhancement: support for Minitest 6.
+
 # Version 1.0.3
 
 * Bug fix: exceptions referencing non-marshallable objects (e.g. sockets) are
