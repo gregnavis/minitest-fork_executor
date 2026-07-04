@@ -7,15 +7,22 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    minitest (5.14.4)
-    rake (12.2.1)
+    drb (2.2.3)
+    minitest (6.0.6)
+      drb (~> 2.0)
+      prism (~> 1.5)
+    ostruct (0.6.3)
+    prism (1.9.0)
+    rake (13.0.6)
 
 PLATFORMS
-  arm64-darwin-21
+  arm64-darwin-25
+  ruby
 
 DEPENDENCIES
   minitest-fork_executor!
-  rake (= 12.2.1)
+  ostruct
+  rake (~> 13.0.0)
 
 BUNDLED WITH
-   2.2.22
+   2.6.9

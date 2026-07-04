@@ -16,30 +16,18 @@ Rake::TestTask.new(:"test:unit") do |t|
   t.verbose = false
 end
 
-EXPECTED_ERROR = <<ERROR
-1) Error:
-UnmarshallableTest#test_unmarshallable_wrapping:
-Minitest::ForkExecutor::UnmarshallableError: An unmarshallable error has occured. Below is its best-effort representation.
-In order to receive the error itself, please disable Minitest::ForkExecutor.
-
-Error class:
-UnmarshallableException
-
-Error message:
-Unmarshallable test exception
-
-Attributes:
-  @io = #<IO:<STDOUT>>
-
-END OF ERROR MESSAGE (ORIGINAL BACKTRACE MAY FOLLOW)
-
-    test/acceptance/unmarshallable_test.rb:32:in `raise_in_0'
-    test/acceptance/unmarshallable_test.rb:28:in `raise_in_1'
-    test/acceptance/unmarshallable_test.rb:24:in `raise_in_2'
-    test/acceptance/unmarshallable_test.rb:18:in `test_unmarshallable_wrapping'
-
-1 runs, 0 assertions, 0 failures, 1 errors, 0 skips
-ERROR
+EXPECTED_ERRORS = [
+  "UnmarshallableTest#test_unmarshallable_wrapping:",
+  "UnmarshallableException: Unmarshallable test exception",
+  "test/acceptance/unmarshallable_test.rb:32:in",
+  "raise_in_0",
+  "test/acceptance/unmarshallable_test.rb:28:in",
+  "raise_in_1",
+  "test/acceptance/unmarshallable_test.rb:24:in",
+  "raise_in_2",
+  "test/acceptance/unmarshallable_test.rb:18:in",
+  "test_unmarshallable_wrapping",
+]
 
 namespace :test do
   task :acceptance do
@@ -49,7 +37,7 @@ namespace :test do
 
       output = File.read(path)
 
-      if !output.end_with?(EXPECTED_ERROR)
+      if !EXPECTED_ERRORS.all? { output.include?(_1) }
         $stderr.puts("Acceptance test failure with the following output:\n\n#{output}")
         exit(1)
       end

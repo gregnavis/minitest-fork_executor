@@ -12,8 +12,8 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'minitest'
 
-  # The last versions that supports Ruby 1.9.3.
-  s.add_development_dependency 'rake', '= 12.2.1'
+  s.add_development_dependency 'rake', '~> 13.0.0'
+  s.add_development_dependency 'ostruct'
 
   s.homepage    = 'https://github.com/gregnavis/minitest-fork_executor'
   s.license     = 'MIT'

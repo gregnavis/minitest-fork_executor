@@ -7,82 +7,106 @@ module Minitest
   # offered by more modern Rubies.
 
   class ForkExecutor
+    # Run a fork-based test case. The block passed to the method should actually
+    # run the test using the original code from Minitest.
+    def self.run
+      # Set up a binary pipe for transporting test results from the child
+      # to the parent process.
+      read_io, write_io = IO.pipe
+      read_io.binmode
+      write_io.binmode
+
+      if Process.fork
+        # The parent process responsible for collecting results.
+
+        # The parent process doesn't write anything.
+        write_io.close
+
+        # Load the result object passed by the child process.
+        result = Marshal.load(read_io)
+
+        # Unwrap all failures from FailureTransport so that they can be
+        # safely presented to the user.
+        result.failures.map!(&:failure)
+
+        # We're done reading results from the child so it's safe to close the
+        # IO object now.
+        read_io.close
+
+        # Wait for the child process to finish before returning the result.
+        Process.wait
+      else
+        # The child process responsible for running the test case.
+
+        # Run the test case method via the original .run_one_method.
+        result = yield
+
+        # Wrap failures in FailureTransport to avoid issue when marshalling.
+        # Some failures correspond to exceptions referencing unmarshallable
+        # objects. For example, a PostgreSQL exception may reference
+        # PG::Connection that cannot be marshalled. In those case, we replace
+        # the original error with UnmarshallableError retaining as much
+        # detail as possible.
+        result.failures.map! { |failure| FailureTransport.new(failure) }
+
+        # The child process doesn't read anything.
+        read_io.close
+
+        # Dump the result object to the write IO object so that it can be
+        # read by the parent process.
+        Marshal.dump(result, write_io)
+
+        # We're done sending results to the parent so it's safe to close the
+        # IO object now.
+        write_io.close
+
+        # Exit the child process as its job is now done.
+        exit
+      end
+
+      # This value is returned ONLY in the parent process, not in the child
+      # process.
+      result
+    end
+
     # #start is called by Minitest when initializing the executor. This is where
     # we override some Minitest internals to implement fork-based execution.
     def start
-      # Store the reference to the original run_one_method method in order to
-      # use it to actually run the test case.
-      original_run_one_method = Minitest.method(:run_one_method)
+      if Minitest.respond_to?(:run_one_method)
+        # Minitest 5
 
-      # Remove the original singleton method from Minitest in order to avoid
-      # method redefinition warnings when patching it in the next step.
-      class << Minitest
-        remove_method(:run_one_method)
-      end
+        # Store the reference to the original run_one_method method in order to
+        # use it to actually run the test case.
+        original_run_one_method = Minitest.method(:run_one_method)
 
-      # Define a new version of run_one_method that forks, calls the original
-      # run_one_method in the child process, and sends results back to the
-      # parent. klass and method_name are the two parameters accepted by the
-      # original run_one_method - they're the test class (e.g. UserTest) and
-      # the test method name (e.g. :test_email_must_be_unique).
-      Minitest.define_singleton_method(:run_one_method) do |klass, method_name|
-        # Set up a binary pipe for transporting test results from the child
-        # to the parent process.
-        read_io, write_io = IO.pipe
-        read_io.binmode
-        write_io.binmode
-
-        if Process.fork
-          # The parent process responsible for collecting results.
-
-          # The parent process doesn't write anything.
-          write_io.close
-
-          # Load the result object passed by the child process.
-          result = Marshal.load(read_io)
-
-          # Unwrap all failures from FailureTransport so that they can be
-          # safely presented to the user.
-          result.failures.map!(&:failure)
-
-          # We're done reading results from the child so it's safe to close the
-          # IO object now.
-          read_io.close
-
-          # Wait for the child process to finish before returning the result.
-          Process.wait
-        else
-          # The child process responsible for running the test case.
-
-          # Run the test case method via the original .run_one_method.
-          result = original_run_one_method.call(klass, method_name)
-
-          # Wrap failures in FailureTransport to avoid issue when marshalling.
-          # Some failures correspond to exceptions referencing unmarshallable
-          # objects. For example, a PostgreSQL exception may reference
-          # PG::Connection that cannot be marshalled. In those case, we replace
-          # the original error with UnmarshallableError retaining as much
-          # detail as possible.
-          result.failures.map! { |failure| FailureTransport.new(failure) }
-
-          # The child process doesn't read anything.
-          read_io.close
-
-          # Dump the result object to the write IO object so that it can be
-          # read by the parent process.
-          Marshal.dump(result, write_io)
-
-          # We're done sending results to the parent so it's safe to close the
-          # IO object now.
-          write_io.close
-
-          # Exit the child process as its job is now done.
-          exit
+        # Remove the original singleton method from Minitest in order to avoid
+        # method redefinition warnings when patching it in the next step.
+        class << Minitest
+          remove_method(:run_one_method)
         end
 
-        # This value is returned ONLY in the parent process, not in the child
-        # process.
-        result
+        # Define a new version of run_one_method that forks, calls the original
+        # run_one_method in the child process, and sends results back to the
+        # parent. klass and method_name are the two parameters accepted by the
+        # original run_one_method - they're the test class (e.g. UserTest) and
+        # the test method name (e.g. :test_email_must_be_unique).
+        Minitest.define_singleton_method(:run_one_method) do |klass, method_name|
+          ForkExecutor.run do
+            original_run_one_method.call(klass, method_name)
+          end
+        end
+      else
+        # Minitest 6
+
+        Runnable.runnables.each do |runnable_class|
+          original_run_method = runnable_class.instance_method(:run)
+          runnable_class.define_method(:run) do
+            bound_original_run_method = original_run_method.bind(self)
+            ForkExecutor.run do
+              bound_original_run_method.call
+            end
+          end
+        end
       end
     end
 
